@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Delete Trip – Traveloop{% endblock %}
+{% block content %}
+<div class="container" style="max-width:500px;">
+  <div class="card" style="margin-top:3rem;">
+    <div class="card-body" style="text-align:center;padding:2.5rem;">
+      <div style="font-size:4rem;margin-bottom:1rem;">🗑️</div>
+      <h2>Delete "{{ trip.name }}"?</h2>
+      <p style="color:var(--muted);margin-top:0.75rem;">This will permanently delete all stops, activities, notes, and checklist items for this trip. This cannot be undone.</p>
+      <div class="flex gap-2 mt-3" style="justify-content:center;">
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Yes, Delete Trip</button>
+        </form>
+        <a href="{% url 'trip_detail' trip.pk %}" class="btn btn-outline">Cancel</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Build Itinerary – {{ trip.name }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="flex-between page-header">
+    <div>
+      <h1>✏️ Itinerary Builder</h1>
+      <p>{{ trip.name }} &nbsp;|&nbsp; {{ trip.start_date|date:"M d" }} – {{ trip.end_date|date:"M d, Y" }}</p>
+    </div>
+    <a href="{% url 'trip_detail' trip.pk %}" class="btn btn-secondary">📋 View Itinerary</a>
+  </div>
+
+  <div class="grid-2" style="grid-template-columns:1fr 1.5fr;align-items:start;">
+
+    <!-- Add Stop Panel -->
+    <div class="card" style="position:sticky;top:80px;">
+      <div class="card-header">➕ Add a City Stop</div>
+      <div class="card-body">
+        <form method="post" action="{% url 'add_stop' trip.pk %}">
+          {% csrf_token %}
+          {% for field in stop_form %}
+          <div class="form-group">
+            <label>{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p style="color:var(--danger);font-size:0.8rem;">{{ field.errors.0 }}</p>{% endif %}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Add Stop</button>
+        </form>
+        <hr style="margin:1.5rem 0;border-color:var(--border);">
+        <div>
+          <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.75rem;">🔍 Find cities to add:</p>
+          <a href="{% url 'city_search' %}" class="btn btn-outline" style="width:100%;justify-content:center;margin-bottom:0.5rem;">Browse Cities</a>
+          <a href="{% url 'activity_search' %}" class="btn btn-outline" style="width:100%;justify-content:center;">Browse Activities</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stops List -->
+    <div>
+      <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1rem;">Current Stops ({{ stops.count }})</h2>
+      {% if stops %}
+        {% for stop in stops %}
+        <div class="stop-block">
+          <div class="stop-header">
+            <div>
+              <h3>📍 {{ stop.city.name }}, {{ stop.city.country }}</h3>
+              <p style="font-size:0.82rem;opacity:0.8;margin-top:0.2rem;">{{ stop.arrival_date|date:"M d" }} → {{ stop.departure_date|date:"M d, Y" }} &nbsp;|&nbsp; {{ stop.days }} day{{ stop.days|pluralize }}</p>
+            </div>
+            <div class="flex gap-1">
+              <span style="font-size:0.85rem;opacity:0.85;">₹{{ stop.total_cost|floatformat:0 }}</span>
+              <a href="{% url 'remove_stop' stop.pk %}" class="btn btn-danger btn-sm" onclick="return confirm('Remove {{ stop.city.name }}?')">✕</a>
+            </div>
+          </div>
+          <div class="stop-body">
+            <!-- Activities for this stop -->
+            <div>
+              <p style="font-size:0.85rem;font-weight:600;margin-bottom:0.5rem;">Activities:</p>
+              {% if stop.stop_activities.all %}
+                {% for sa in stop.stop_activities.all %}
+                <span class="activity-chip">
+                  {{ sa.activity.name }} <span class="cost">₹{{ sa.activity.cost }}</span>
+                  <a href="{% url 'remove_activity_from_stop' sa.pk %}" style="color:var(--danger);text-decoration:none;margin-left:0.25rem;font-size:0.9rem;">✕</a>
+                </span>
+                {% endfor %}
+              {% else %}
+                <p style="font-size:0.85rem;color:var(--muted);">No activities yet</p>
+              {% endif %}
+            </div>
+
+            <!-- Add Activity for this stop -->
+            <div class="mt-2">
+              <details style="cursor:pointer;">
+                <summary style="font-size:0.85rem;font-weight:600;color:var(--secondary);">➕ Add Activity</summary>
+                <div style="margin-top:0.75rem;background:#f8f9fa;border-radius:8px;padding:0.75rem;">
+                  <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.5rem;">Activities in {{ stop.city.name }}:</p>
+                  {% for activity in stop.city.activities.all %}
+                  <form method="post" action="{% url 'add_activity_to_stop' stop.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="activity_id" value="{{ activity.pk }}">
+                    <button type="submit" class="activity-chip" style="border:none;cursor:pointer;background:#e8f4fd;margin-bottom:0.25rem;">
+                      + {{ activity.name }} <span class="cost">₹{{ activity.cost }}</span>
+                    </button>
+                  </form>
+                  {% empty %}
+                  <p style="font-size:0.82rem;color:var(--muted);">No activities for this city.</p>
+                  {% endfor %}
+                </div>
+              </details>
+            </div>
+            {% if stop.notes %}
+            <p style="font-size:0.82rem;color:var(--muted);margin-top:0.75rem;">📝 {{ stop.notes }}</p>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="empty-state card card-body">
+        <div class="icon">📍</div>
+        <h3>No stops added yet</h3>
+        <p>Use the form to add your first city stop.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

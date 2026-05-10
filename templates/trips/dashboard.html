@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard – Traveloop{% endblock %}
+{% block content %}
+<div class="container">
+  <!-- Hero -->
+  <div style="background:linear-gradient(135deg,#1a1a2e,#2d4a7a);border-radius:16px;padding:2.5rem;color:white;margin-bottom:2rem;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:-40px;right:-40px;font-size:10rem;opacity:0.08;">🌍</div>
+    <h1 style="font-size:2rem;font-weight:800;">Hey {{ user.first_name|default:user.username }}! 👋</h1>
+    <p style="opacity:0.85;margin-top:0.5rem;font-size:1.05rem;">Where are you headed next?</p>
+    <div class="flex gap-2 mt-3">
+      <a href="{% url 'trip_create' %}" class="btn btn-primary">✈️ Plan New Trip</a>
+      <a href="{% url 'trip_list' %}" class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.4);">View All Trips</a>
+    </div>
+  </div>
+
+  <!-- Recent Trips -->
+  <div class="flex-between mb-2">
+    <h2 style="font-size:1.3rem;font-weight:700;">Recent Trips</h2>
+    <a href="{% url 'trip_list' %}" class="btn btn-outline btn-sm">View All →</a>
+  </div>
+
+  {% if trips %}
+  <div class="grid-3 mb-3">
+    {% for trip in trips %}
+    <div class="trip-card">
+      <div class="trip-card-img">
+        {% if trip.cover_photo %}<img src="{{ trip.cover_photo.url }}" alt="{{ trip.name }}">
+        {% else %}✈️{% endif %}
+      </div>
+      <div class="trip-card-body">
+        <div class="trip-card-title">{{ trip.name }}</div>
+        <div class="trip-meta">
+          <span>📅 {{ trip.start_date|date:"M d" }} – {{ trip.end_date|date:"M d, Y" }}</span>
+          <span>📍 {{ trip.stop_count }} stop{{ trip.stop_count|pluralize }}</span>
+        </div>
+        {% if trip.budget %}
+        <div class="mt-1">
+          <span class="badge badge-primary">Budget: ₹{{ trip.budget }}</span>
+        </div>
+        {% endif %}
+      </div>
+      <div class="trip-card-actions">
+        <a href="{% url 'trip_detail' trip.pk %}" class="btn btn-secondary btn-sm">View</a>
+        <a href="{% url 'itinerary_builder' trip.pk %}" class="btn btn-outline btn-sm">Edit</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state card card-body mb-3">
+    <div class="icon">🗺️</div>
+    <h3>No trips yet</h3>
+    <p>Plan your first trip and start exploring the world!</p>
+    <a href="{% url 'trip_create' %}" class="btn btn-primary mt-2">Create First Trip</a>
+  </div>
+  {% endif %}
+
+  <!-- Popular Cities -->
+  <div class="flex-between mb-2">
+    <h2 style="font-size:1.3rem;font-weight:700;">🇮🇳 Popular Indian Destinations</h2>
+    <a href="{% url 'city_search' %}" class="btn btn-outline btn-sm">Explore All Cities →</a>
+  </div>
+
+  <div class="grid-3">
+    {% for city in indian_cities %}
+    <a href="{% url 'city_search' %}?q={{ city.name }}" style="text-decoration:none;color:inherit;">
+      <div class="city-card">
+        {% if city.image_url %}
+        <div class="city-img"><img src="{{ city.image_url }}" alt="{{ city.name }}" loading="lazy"></div>
+        {% else %}
+        <div class="city-img-placeholder">🏙️</div>
+        {% endif %}
+        <div class="city-info">
+          <div class="city-name">{{ city.name }}</div>
+          <div class="city-meta">{{ city.country }} • {{ city.region }}</div>
+          <span class="cost-badge">~₹{{ city.cost_index }}/day</span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Global Destinations -->
+<div class="container mt-4">
+  <div class="flex-between mb-3">
+    <h2 style="font-size:1.3rem;font-weight:700;">🌍 Popular Global Destinations</h2>
+  </div>
+
+  <div class="grid-3">
+    {% for city in global_cities %}
+    <a href="{% url 'city_search' %}?q={{ city.name }}" style="text-decoration:none;color:inherit;">
+      <div class="city-card">
+        {% if city.image_url %}
+        <div class="city-img"><img src="{{ city.image_url }}" alt="{{ city.name }}" loading="lazy"></div>
+        {% else %}
+        <div class="city-img-placeholder">🏙️</div>
+        {% endif %}
+        <div class="city-info">
+          <div class="city-name">{{ city.name }}</div>
+          <div class="city-meta">{{ city.country }} • {{ city.region }}</div>
+          <span class="cost-badge">~₹{{ city.cost_index }}/day</span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

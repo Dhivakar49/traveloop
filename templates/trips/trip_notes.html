@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Notes – {{ trip.name }}{% endblock %}
+{% block content %}
+<div class="container" style="max-width:900px;">
+  <div class="flex-between page-header">
+    <div>
+      <h1>📝 Trip Notes</h1>
+      <p>{{ trip.name }} – {{ notes.count }} note{{ notes.count|pluralize }}</p>
+    </div>
+    <a href="{% url 'trip_detail' trip.pk %}" class="btn btn-outline">← Back to Trip</a>
+  </div>
+
+  <div class="grid-2" style="align-items:start;">
+    <div class="card" style="position:sticky;top:80px;">
+      <div class="card-header">📝 Add Note</div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          {% for field in form %}
+          <div class="form-group">
+            <label>{{ field.label }}</label>
+            {{ field }}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Save Note</button>
+        </form>
+      </div>
+    </div>
+
+    <div>
+      {% if notes %}
+        {% for note in notes %}
+        <div class="note-card">
+          <div class="flex-between">
+            <h4>{{ note.title }}</h4>
+            <a href="{% url 'delete_note' note.pk %}" style="color:var(--danger);text-decoration:none;font-size:0.9rem;" onclick="return confirm('Delete note?')">✕</a>
+          </div>
+          {% if note.stop %}<span class="badge badge-info" style="margin-bottom:0.5rem;">📍 {{ note.stop.city.name }}</span>{% endif %}
+          <p>{{ note.content }}</p>
+          <p class="note-meta">🕐 {{ note.created_at|date:"M d, Y H:i" }}</p>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="empty-state card card-body">
+        <div class="icon">📝</div>
+        <h3>No notes yet</h3>
+        <p>Add reminders, hotel info, local contacts, and more.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Activities – Traveloop{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1>🎯 Activity Search</h1>
+    <p>Find things to do at your destinations</p>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body" style="padding:1.25rem;">
+      <form method="get" style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+        <div style="flex:1;min-width:180px;">
+          <label style="font-weight:600;font-size:0.9rem;display:block;margin-bottom:0.4rem;">Search</label>
+          <input type="text" name="q" value="{{ q }}" class="form-input" placeholder="Activity name...">
+        </div>
+        <div style="flex:1;min-width:160px;">
+          <label style="font-weight:600;font-size:0.9rem;display:block;margin-bottom:0.4rem;">City</label>
+          <select name="city_id" class="form-input">
+            <option value="">All Cities</option>
+            {% for city in cities %}
+            <option value="{{ city.pk }}" {% if selected_city == city.pk|stringformat:'s' %}selected{% endif %}>{{ city.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="flex:1;min-width:160px;">
+          <label style="font-weight:600;font-size:0.9rem;display:block;margin-bottom:0.4rem;">Type</label>
+          <select name="type" class="form-input">
+            <option value="">All Types</option>
+            {% for val, label in type_choices %}
+            <option value="{{ val }}" {% if selected_type == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">🔍 Search</button>
+      </form>
+    </div>
+  </div>
+
+  <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1rem;">{{ activities.count }} activities found</p>
+
+  <div class="grid-3">
+    {% for activity in activities %}
+    <div class="card">
+      <div style="background:linear-gradient(135deg,{% if activity.activity_type == 'sightseeing' %}#667eea,#764ba2{% elif activity.activity_type == 'food' %}#f093fb,#f5576c{% elif activity.activity_type == 'adventure' %}#4facfe,#00f2fe{% elif activity.activity_type == 'culture' %}#43e97b,#38f9d7{% else %}#fa709a,#fee140{% endif %});height:80px;display:flex;align-items:center;justify-content:center;font-size:2rem;">
+        {% if activity.activity_type == 'sightseeing' %}🏛️
+        {% elif activity.activity_type == 'food' %}🍽️
+        {% elif activity.activity_type == 'adventure' %}🧗
+        {% elif activity.activity_type == 'culture' %}🎭
+        {% elif activity.activity_type == 'shopping' %}🛍️
+        {% elif activity.activity_type == 'relaxation' %}🧘
+        {% elif activity.activity_type == 'nightlife' %}🌙
+        {% else %}🎯{% endif %}
+      </div>
+      <div class="card-body">
+        <h3 style="font-size:0.95rem;font-weight:700;">{{ activity.name }}</h3>
+        <p style="font-size:0.8rem;color:var(--muted);margin-top:0.25rem;">📍 {{ activity.city.name }} &bull; ⏱ {{ activity.duration_hours }}h &bull; {{ activity.get_activity_type_display }}</p>
+        {% if activity.description %}<p style="font-size:0.82rem;color:var(--text);margin-top:0.5rem;">{{ activity.description|truncatechars:90 }}</p>{% endif %}
+        <div class="flex-between mt-2">
+          <span style="font-size:1rem;font-weight:700;color:var(--primary);">₹{{ activity.cost }}</span>
+          <span class="badge badge-info">{{ activity.get_activity_type_display }}</span>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state" style="grid-column:1/-1;">
+      <div class="icon">🎯</div>
+      <h3>No activities found</h3>
+      <p>Try changing your filters</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

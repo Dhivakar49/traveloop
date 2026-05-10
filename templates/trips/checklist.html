@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Packing Checklist – {{ trip.name }}{% endblock %}
+{% block content %}
+<div class="container" style="max-width:800px;">
+  <div class="flex-between page-header">
+    <div>
+      <h1>☑️ Packing Checklist</h1>
+      <p>{{ trip.name }} &nbsp;|&nbsp; {{ packed }}/{{ total }} packed</p>
+    </div>
+    <a href="{% url 'trip_detail' trip.pk %}" class="btn btn-outline">← Back to Trip</a>
+  </div>
+
+  <!-- Progress -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="flex-between" style="margin-bottom:0.5rem;">
+        <span style="font-weight:600;">Packing Progress</span>
+        <span style="color:var(--muted);font-size:0.9rem;">{{ packed }} of {{ total }} items packed</span>
+      </div>
+      <div class="budget-bar-track" style="height:14px;">
+        <div class="budget-bar-fill" style="width:{% if total %}{% widthratio packed total 100 %}{% else %}0{% endif %}%;background:var(--success);"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="align-items:start;">
+    <!-- Add Item -->
+    <div class="card" style="position:sticky;top:80px;">
+      <div class="card-header">➕ Add Item</div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          {% for field in form %}
+          <div class="form-group">
+            <label>{{ field.label }}</label>
+            {{ field }}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Add Item</button>
+        </form>
+
+        <hr style="margin:1.5rem 0;border-color:var(--border);">
+        <p style="font-size:0.85rem;font-weight:600;margin-bottom:0.75rem;">Quick Add:</p>
+        {% for category, items in by_category.items %}
+        <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.25rem;font-weight:600;">{{ category }}</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Items by Category -->
+    <div>
+      {% if by_category %}
+        {% for category, items in by_category.items %}
+        <div class="card mb-2">
+          <div class="card-header">
+            {% if category == 'Clothing' %}👕{% elif category == 'Documents' %}📄{% elif category == 'Electronics' %}💻{% elif category == 'Toiletries' %}🧴{% elif category == 'Medicine' %}💊{% else %}📦{% endif %}
+            {{ category }}
+            <span class="badge badge-info" style="margin-left:0.5rem;">{{ items|length }}</span>
+          </div>
+          <div class="card-body">
+            {% for item in items %}
+            <div class="checklist-item {% if item.is_packed %}packed{% endif %}">
+              <a href="{% url 'toggle_checklist_item' item.pk %}" style="text-decoration:none;display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                <span style="font-size:1.3rem;">{% if item.is_packed %}✅{% else %}☐{% endif %}</span>
+                <span style="flex:1;{% if item.is_packed %}text-decoration:line-through;opacity:0.6;{% endif %}">{{ item.name }}</span>
+              </a>
+              <a href="{% url 'delete_checklist_item' item.pk %}" style="color:var(--danger);text-decoration:none;font-size:1.1rem;padding:0.25rem 0.5rem;" onclick="return confirm('Delete {{ item.name }}?')">✕</a>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="empty-state card card-body">
+        <div class="icon">☑️</div>
+        <h3>Checklist is empty</h3>
+        <p>Add items you need to pack for this trip.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

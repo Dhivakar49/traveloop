@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% block title %}{{ trip.name }} – Traveloop{% endblock %}
+{% block content %}
+<div class="container">
+  <!-- Header -->
+  <div style="background:linear-gradient(135deg,#1a1a2e,#2d4a7a);border-radius:16px;padding:2rem;color:white;margin-bottom:2rem;">
+    <div class="flex-between">
+      <div>
+        <h1 style="font-size:1.8rem;font-weight:800;">{{ trip.name }}</h1>
+        <p style="opacity:0.8;margin-top:0.3rem;">📅 {{ trip.start_date|date:"M d" }} – {{ trip.end_date|date:"M d, Y" }} &nbsp;|&nbsp; 📆 {{ trip.total_days }} days &nbsp;|&nbsp; 📍 {{ trip.stop_count }} stops</p>
+        {% if trip.description %}<p style="opacity:0.7;margin-top:0.5rem;font-size:0.9rem;">{{ trip.description }}</p>{% endif %}
+      </div>
+      {% if trip.is_public %}
+      <div style="text-align:right;">
+        <span class="badge badge-success">🌐 Public</span><br>
+        <a href="{% url 'public_itinerary' trip.share_uuid %}" target="_blank" style="color:var(--primary);font-size:0.82rem;margin-top:0.5rem;display:inline-block;">Share Link →</a>
+      </div>
+      {% endif %}
+    </div>
+    <div class="flex gap-2 mt-3">
+      <a href="{% url 'itinerary_builder' trip.pk %}" class="btn btn-primary">✏️ Edit Itinerary</a>
+      <a href="{% url 'checklist' trip.pk %}" class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.4);">☑️ Packing List</a>
+      <a href="{% url 'trip_notes' trip.pk %}" class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.4);">📝 Notes</a>
+    </div>
+  </div>
+
+  <div class="grid-2" style="grid-template-columns:2fr 1fr;align-items:start;">
+    <!-- Itinerary Timeline -->
+    <div>
+      <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:1.5rem;">🗺️ Itinerary</h2>
+      {% if stops %}
+      <div class="timeline">
+        {% for stop in stops %}
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="flex-between mb-2">
+              <h3 style="font-size:1.05rem;font-weight:700;">{{ stop.city.name }}, {{ stop.city.country }}</h3>
+              <span class="badge badge-info">{{ stop.days }} day{{ stop.days|pluralize }}</span>
+            </div>
+            <p style="font-size:0.82rem;color:var(--muted);">{{ stop.arrival_date|date:"M d" }} → {{ stop.departure_date|date:"M d, Y" }}</p>
+
+            {% if stop.stop_activities.all %}
+            <div class="mt-2">
+              {% for sa in stop.stop_activities.all %}
+              <span class="activity-chip">
+                🎯 {{ sa.activity.name }}
+                <span class="cost">₹{{ sa.activity.cost }}</span>
+              </span>
+              {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="mt-2" style="font-size:0.82rem;color:var(--muted);">
+              💰 Est. cost: <strong style="color:var(--text);">₹{{ stop.total_cost|floatformat:0 }}</strong>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state card card-body">
+        <div class="icon">🗺️</div>
+        <h3>No stops yet</h3>
+        <a href="{% url 'itinerary_builder' trip.pk %}" class="btn btn-primary mt-2">Add Stops</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Budget Sidebar -->
+    <div>
+      <div class="card mb-2">
+        <div class="card-header">💰 Budget Breakdown</div>
+        <div class="card-body">
+          <canvas id="budgetChart" height="200"></canvas>
+          <hr style="margin:1rem 0;border-color:var(--border);">
+          <div class="budget-bar">
+            <div class="budget-bar-label"><span>🚗 Transport</span><span>₹{{ transport_total|floatformat:0 }}</span></div>
+            <div class="budget-bar-track"><div class="budget-bar-fill" style="width:{% if grand_total %}{% widthratio transport_total grand_total 100 %}{% else %}0{% endif %}%;background:#2d7dd2;"></div></div>
+          </div>
+          <div class="budget-bar">
+            <div class="budget-bar-label"><span>🏨 Accommodation</span><span>₹{{ accommodation_total|floatformat:0 }}</span></div>
+            <div class="budget-bar-track"><div class="budget-bar-fill" style="width:{% if grand_total %}{% widthratio accommodation_total grand_total 100 %}{% else %}0{% endif %}%;background:#f5a623;"></div></div>
+          </div>
+          <div class="budget-bar">
+            <div class="budget-bar-label"><span>🍽️ Meals</span><span>₹{{ meal_total|floatformat:0 }}</span></div>
+            <div class="budget-bar-track"><div class="budget-bar-fill" style="width:{% if grand_total %}{% widthratio meal_total grand_total 100 %}{% else %}0{% endif %}%;background:#28a745;"></div></div>
+          </div>
+          <div class="budget-bar">
+            <div class="budget-bar-label"><span>🎯 Activities</span><span>₹{{ activity_total|floatformat:0 }}</span></div>
+            <div class="budget-bar-track"><div class="budget-bar-fill" style="width:{% if grand_total %}{% widthratio activity_total grand_total 100 %}{% else %}0{% endif %}%;background:#dc3545;"></div></div>
+          </div>
+          <hr style="margin:1rem 0;border-color:var(--border);">
+          <div class="flex-between" style="font-weight:700;">
+            <span>Total</span><span style="font-size:1.1rem;">₹{{ grand_total|floatformat:0 }}</span>
+          </div>
+          {% if trip.budget %}
+          <div class="flex-between mt-1" style="font-size:0.85rem;color:var(--muted);">
+            <span>Budget</span><span>₹{{ trip.budget }}</span>
+          </div>
+          {% if grand_total > trip.budget|floatformat:0|add:0 %}
+          <div style="background:#f8d7da;color:#721c24;border-radius:8px;padding:0.6rem;margin-top:0.75rem;font-size:0.85rem;">
+            ⚠️ Over budget by ₹{{ grand_total|floatformat:0 }}
+          </div>
+          {% else %}
+          <div style="background:#d4edda;color:#155724;border-radius:8px;padding:0.6rem;margin-top:0.75rem;font-size:0.85rem;">
+            ✅ Within budget!
+          </div>
+          {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="card">
+        <div class="card-header">Quick Actions</div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:0.5rem;">
+          <a href="{% url 'checklist' trip.pk %}" class="btn btn-outline" style="justify-content:center;">☑️ Packing Checklist</a>
+          <a href="{% url 'trip_notes' trip.pk %}" class="btn btn-outline" style="justify-content:center;">📝 Trip Notes</a>
+          <a href="{% url 'trip_edit' trip.pk %}" class="btn btn-outline" style="justify-content:center;">⚙️ Edit Trip</a>
+          <a href="{% url 'trip_delete' trip.pk %}" class="btn btn-danger" style="justify-content:center;">🗑️ Delete Trip</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+fetch("{% url 'budget_data' trip.pk %}")
+  .then(r => r.json())
+  .then(data => {
+    const ctx = document.getElementById('budgetChart');
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: data.labels,
+        datasets: [{
+          data: data.values,
+          backgroundColor: ['#2d7dd2','#f5a623','#28a745','#dc3545'],
+          borderWidth: 2,
+          borderColor: '#fff',
+        }]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+        cutout: '65%',
+      }
+    });
+  });
+</script>
+{% endblock %}

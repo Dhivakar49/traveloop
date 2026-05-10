@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}My Trips – Traveloop{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="flex-between page-header">
+    <div>
+      <h1>My Trips 🗺️</h1>
+      <p>{{ trips.count }} trip{{ trips.count|pluralize }} planned</p>
+    </div>
+    <a href="{% url 'trip_create' %}" class="btn btn-primary">➕ New Trip</a>
+  </div>
+
+  {% if trips %}
+  <div class="grid-3">
+    {% for trip in trips %}
+    <div class="trip-card">
+      <div class="trip-card-img">
+        {% if trip.cover_photo %}<img src="{{ trip.cover_photo.url }}" alt="{{ trip.name }}">
+        {% else %}✈️{% endif %}
+      </div>
+      <div class="trip-card-body">
+        <div class="trip-card-title">{{ trip.name }}</div>
+        <div class="trip-meta">
+          <span>📅 {{ trip.start_date|date:"M d" }} – {{ trip.end_date|date:"M d, Y" }}</span>
+          <span>📍 {{ trip.stop_count }} stop{{ trip.stop_count|pluralize }}</span>
+          <span>📆 {{ trip.total_days }} day{{ trip.total_days|pluralize }}</span>
+        </div>
+        {% if trip.description %}
+        <p style="font-size:0.85rem;color:var(--muted);margin-top:0.75rem;">{{ trip.description|truncatechars:80 }}</p>
+        {% endif %}
+        <div class="mt-1 flex gap-1">
+          {% if trip.budget %}<span class="badge badge-primary">Budget: ₹{{ trip.budget }}</span>{% endif %}
+          {% if trip.is_public %}<span class="badge badge-success">Public</span>{% endif %}
+        </div>
+      </div>
+      <div class="trip-card-actions">
+        <a href="{% url 'trip_detail' trip.pk %}" class="btn btn-secondary btn-sm">📋 View</a>
+        <a href="{% url 'itinerary_builder' trip.pk %}" class="btn btn-outline btn-sm">✏️ Build</a>
+        <a href="{% url 'trip_edit' trip.pk %}" class="btn btn-outline btn-sm">⚙️</a>
+        <a href="{% url 'trip_delete' trip.pk %}" class="btn btn-danger btn-sm">🗑</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state card card-body">
+    <div class="icon">✈️</div>
+    <h3>No trips yet!</h3>
+    <p>Start planning your dream journey today.</p>
+    <a href="{% url 'trip_create' %}" class="btn btn-primary mt-2">Plan a Trip</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

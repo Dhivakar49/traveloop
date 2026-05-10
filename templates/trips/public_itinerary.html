@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}{{ trip.name }} – Traveloop{% endblock %}
+{% block content %}
+<div class="container">
+  <div style="background:linear-gradient(135deg,#1a1a2e,#2d4a7a);border-radius:16px;padding:2.5rem;color:white;margin-bottom:2rem;text-align:center;">
+    <div style="font-size:3rem;margin-bottom:0.5rem;">🌍</div>
+    <h1 style="font-size:2rem;font-weight:800;">{{ trip.name }}</h1>
+    <p style="opacity:0.8;margin-top:0.5rem;">📅 {{ trip.start_date|date:"M d" }} – {{ trip.end_date|date:"M d, Y" }} &nbsp;|&nbsp; {{ trip.total_days }} days &nbsp;|&nbsp; {{ trip.stop_count }} stops</p>
+    <p style="opacity:0.7;font-size:0.9rem;margin-top:0.5rem;">Planned by {{ trip.user.first_name|default:trip.user.username }}</p>
+  </div>
+
+  <div class="timeline" style="max-width:700px;margin:0 auto;">
+    {% for stop in stops %}
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-content">
+        <div class="flex-between mb-2">
+          <h3 style="font-size:1.1rem;font-weight:700;">📍 {{ stop.city.name }}, {{ stop.city.country }}</h3>
+          <span class="badge badge-info">{{ stop.days }} day{{ stop.days|pluralize }}</span>
+        </div>
+        <p style="font-size:0.82rem;color:var(--muted);">{{ stop.arrival_date|date:"M d" }} → {{ stop.departure_date|date:"M d, Y" }}</p>
+        {% if stop.stop_activities.all %}
+        <div class="mt-2">
+          {% for sa in stop.stop_activities.all %}
+          <span class="activity-chip">🎯 {{ sa.activity.name }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div style="text-align:center;margin-top:2rem;">
+    <a href="{% url 'signup' %}" class="btn btn-primary">✈️ Plan Your Own Trip on Traveloop</a>
+  </div>
+</div>
+{% endblock %}
